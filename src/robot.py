@@ -1,9 +1,62 @@
 #!/usr/bin/env python3
 from ev3dev.ev3 import *
-
+import pid 
 from time import sleep
 
 
+
+
+class Robot:
+
+	motor_l, motor_r,
+	color_sensor_l, color_sensor_r,
+	def_speed, 
+	color_l, color_r 
+	pid, MAX_SPEED = 1000
+	def __init__(self, left_motor_port ,right_motor_port, left_color_port, right_color_port, def_speed):
+		self.motor_l = LargeMotor(left_motor_port)
+		self.motor_r = LargeMotor(right_motor_port)
+
+		self.color_sensor_l = ColorSensor(left_color_port)
+		self.color_sensor_l.mode = 'COL-REFLECT'
+		assert color_sensor_l.connected, "Connect a color sensor to any sensor port"
+
+		self.color_sensor_r = ColorSensor(right_color_port)
+		self.color_sensor_r.mode = 'COL-REFLECT'
+		assert color_sensor_r.connected, "Connect a color sensor to any sensor port"
+
+		self.def_speed = def_speed
+		assert def_speeed <= MAX_SPEED, "Speed too much" 
+
+		color_l = 0
+		color_r = 0
+		pid = PID(10, 0, 0, 0.1 )
+
+	def readColor(self):
+		color_l = color_sensor_l.value()
+		color_r = color_sensor_r.value()
+		return (color_l, color_r)
+
+# to bedzie sluzyc do ustalenia predkosci silnikow i wysterowania ich
+	def driveMotors(self): 
+		
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
 class PID:
     iteration_time = 1
     desired_value = 0 # Wartosc zadana
@@ -98,3 +151,5 @@ def  check_the_color(color_sensor):
 
 
 main()
+
+"""
