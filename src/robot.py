@@ -1,155 +1,98 @@
 #!/usr/bin/env python3
 from ev3dev.ev3 import *
 import pid 
+from math import *
 from time import sleep
 
-
-
+MAX_SPEED = 1000
+MIN_SPEED = 0
+REGULATION_FACTOR = 1
 
 class Robot:
-
-	motor_l, motor_r,
-	color_sensor_l, color_sensor_r,
-	def_speed, 
-	color_l, color_r 
-	pid, MAX_SPEED = 1000
 	def __init__(self, left_motor_port ,right_motor_port, left_color_port, right_color_port, def_speed):
 		self.motor_l = LargeMotor(left_motor_port)
 		self.motor_r = LargeMotor(right_motor_port)
 
 		self.color_sensor_l = ColorSensor(left_color_port)
 		self.color_sensor_l.mode = 'COL-REFLECT'
-		assert color_sensor_l.connected, "Connect a color sensor to any sensor port"
+		assert self.color_sensor_l.connected, "Connect a color sensor to any sensor port"
 
 		self.color_sensor_r = ColorSensor(right_color_port)
 		self.color_sensor_r.mode = 'COL-REFLECT'
-		assert color_sensor_r.connected, "Connect a color sensor to any sensor port"
+		assert self.color_sensor_r.connected, "Connect a color sensor to any sensor port"
 
 		self.def_speed = def_speed
-		assert def_speeed <= MAX_SPEED, "Speed too much" 
+		assert self.def_speed <= MAX_SPEED, "Speed too much" 
 
-		color_l = 0
-		color_r = 0
-		pid = PID(10, 0, 0, 0.1 )
+		self.color_l = 0
+		self.color_r = 0
+		self.actual_regulation = 0
+		T_crit = 1
+		K_crit = 7
+		self.pid_ = pid.PID(0.6*K_crit, 0.13*T_crit, 0.5*T_crit)
+		#self.pid_ = pid.PID(K_crit, 0, 0)
 
-	def readColor(self):
-		color_l = color_sensor_l.value()
-		color_r = color_sensor_r.value()
-		return (color_l, color_r)
-
-# to bedzie sluzyc do ustalenia predkosci silnikow i wysterowania ich
-	def driveMotors(self): 
-		
+	def read_colors(self):
+		self.color_l = self.color_sensor_l.value()
+		self.color_r = self.color_sensor_r.value()
+		return (self.color_l, self.color_r)
 	
+	def count_regulation(self):
+		'''
+		actual_regulation > 0 => lewy bardziej na bialym => lewy mocniej, prawy slabiej		
+		'''
+		self.actual_regulation = self.pid_.get_regulation(self.color_l - self.color_r) * REGULATION_FACTOR
+		return self.actual_regulation 
+	
+	def drive_motors(self):
+		regulation = self.actual_regulation
+		silniki = self.get_silniki(regulation)
+		wew_silnik = silniki['wew_silnik']
+		zew_silnik = silniki['zew_silnik']
+
+		regulation_abs = abs(regulation)
+		ile_dla_zewnetrznego = 	self.ile_zostanie_sterowania_po_wysterowaniu_wewnetrznego(regulation_abs )
+		self.zwolnij_wew_silnik_jak_sie_da(wew_silnik, regulation_abs)
+		zew_silnik.run_forever(speed_sp=self.speed_corection(self.def_speed+ile_dla_zewnetrznego))
+
+		#left_motor.run_forever(speed_sp=left_speed)
+		#right_motor.run_forever(speed_sp=right_speed)
+	
+	@staticmethod
+	def speed_corection(speed):
+		if speed > MAX_SPEED:
+			return MAX_SPEED
+		elif speed < 0:
+			return 0
+		else:
+			return speed
+	
+	def get_silniki(self, regulation):
+		if regulation < 0:
+			return {'wew_silnik' : self.motor_r, 'zew_silnik': self.motor_l}
+		else:
+			return {'wew_silnik' : self.motor_l, 'zew_silnik': self.motor_r}
+			
+	def ile_zostanie_sterowania_po_wysterowaniu_wewnetrznego(self, reg_abs):
+		if reg_abs > (self.def_speed - MIN_SPEED):
+			return reg_abs - (self.def_speed - MIN_SPEED)
+		return 0
+			
+	def zwolnij_wew_silnik_jak_sie_da(self, wew_silnik, reg_abs):
+		ile_zostanie_sterowania = self.ile_zostanie_sterowania_po_wysterowaniu_wewnetrznego(reg_abs)
+		print('zostalo sterowania {}'.format(ile_zostanie_sterowania))
+		if ile_zostanie_sterowania == 0: #sterujemy tylko wew silnik
+			wew_silnik.run_forever(speed_sp=self.speed_corection(self.def_speed - reg_abs))
+		else: #troche sterowania zostanie - musimy wysterowac tez zewnetrzny silnik
+			wew_silnik.run_forever(speed_sp=self.speed_corection(MIN_SPEED))
+		#return ile_zostanie_sterowania
+
+	def check_the_color(color_sensor):
+		colors=('unknown','black','blue','green','yellow','red','white','brown')
+		self.color_sensor_l.mode = 'COL-COLOR'
+		self.color_sensor_r.mode = 'COL-COLOR'
+		#color_l = 
+		print(colors[color_sensor.value()])
+		color_sensor.mode='COL-REFLECT'
 	
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-class PID:
-    iteration_time = 1
-    desired_value = 0 # Wartosc zadana
-    Kp = 90
-    Ki = 0
-    Kd = 0
-    integral=0
-    error_prior = 0
-
-    def pid_regulation(self, color_left, color_right):
-        actual_value = color_left - color_right
-        error = actual_value - self.desired_value
-        self.integral = self.integral + (error*self.iteration_time)
-        derivative = (error-self.error_prior)/self.iteration_time
-        output = self.Kp*error + self.Ki*self.integral + self.Kd*derivative
-        self.error_prior = error
-        if self.integral > 100 or self.integral < 100:
-            self.integral = 0
-        return output
-
-
-def main():
-    try:
-        left_motor = LargeMotor('outD')
-        right_motor = LargeMotor('outA')
-
-
-        '''
-        ir = InfraredSensor()
-        assert ir.connected, "Connect a single infrared sensor to any sensor port"
-
-        ts = TouchSensor();
-        assert ts.connected, "Connect a touch sensor to any port"
-        '''
-
-        color_sensor_left = ColorSensor('in4')
-        color_sensor_left.mode='COL-REFLECT'
-        assert color_sensor_left.connected, "Connect a color sensor to any sensor port"
-
-        color_sensor_right = ColorSensor('in1')
-        color_sensor_right.mode='COL-REFLECT'
-        assert color_sensor_right.connected, "Connect a color sensor to any sensor port"
-
-        speed = 200
-
-        pid = PID()
-        while 1:
-            color_left = color_sensor_left.value() #Max 80 dla bialego 0 - czarny
-            color_right = color_sensor_right.value() #Max 80 dla bialego 0 - czarny
-            print((color_left, color_right))
-            wartosc_sterowania = pid.pid_regulation(color_left, color_right)
-            wartosc_sterowania = wartosc_sterowania/20
-
-            left_speed = speed
-            right_speed = speed
-            if wartosc_sterowania < 0 :
-                #przyspiesz lewy silnik
-                left_speed = speed_corection(speed - wartosc_sterowania)
-                right_speed = speed_corection(speed + wartosc_sterowania)
-
-            else :
-                right_speed = speed_corection(speed + wartosc_sterowania)
-                left_speed = speed_corection(speed - wartosc_sterowania)
-            print(left_speed, right_speed)
-            left_motor.run_forever(speed_sp=left_speed)
-            right_motor.run_forever(speed_sp=right_speed)
-            sleep(0.2)
-    except KeyboardInterrupt:
-        left_motor.stop(stop_action="hold")
-        right_motor.stop(stop_action="hold")
-    except OSError as e:
-        print(e)
-        left_motor.stop(stop_action="hold")
-        right_motor.stop(stop_action="hold")
-
-
-
-def speed_corection(speed):
-    if speed > 1000:
-        return 1000
-    else:
-        return speed
-
-
-
-def  check_the_color(color_sensor):
-    colors=('unknown','black','blue','green','yellow','red','white','brown')
-    color_sensor.mode = 'COL-COLOR'
-    print(colors[color_sensor.value()])
-    color_sensor.mode='COL-REFLECT'
-
-
-
-main()
-
-"""
