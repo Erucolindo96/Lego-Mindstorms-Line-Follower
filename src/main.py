@@ -6,7 +6,7 @@ from time import sleep
 
 def main():
 	try:
-		robot_ = robot.Robot('outD', 'outA','in4', 'in1', 300)
+		robot_ = robot.Robot('outD', 'outA','in4', 'in1', 250)
 		while 1:
 			robot_.read_colors()
 			print(robot_.count_regulation())
@@ -27,8 +27,10 @@ main()
 
 
 '''
-Predkosc | K_crit | T_crit
-100|15|0.7
-300|7|0.9
-
+Predkosc | K_crit | T_crit | REGULATION_FACTOR
+100|15|0.7| 1
+300|7|0.9 | 1
+300|8|0.9|1.5 # 0,7 mnoznik przy Kd
+250|7|0.9|1.5 #Kd mnoznik 0,5
+250|6.5|1|1.5| #Kd mnoznik 0,5
 '''

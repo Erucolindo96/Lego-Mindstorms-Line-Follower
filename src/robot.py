@@ -5,8 +5,8 @@ from math import *
 from time import sleep
 
 MAX_SPEED = 1000
-MIN_SPEED = 0
-REGULATION_FACTOR = 1
+MIN_SPEED = -150
+REGULATION_FACTOR = 2
 
 class Robot:
 	def __init__(self, left_motor_port ,right_motor_port, left_color_port, right_color_port, def_speed):
@@ -27,8 +27,8 @@ class Robot:
 		self.color_l = 0
 		self.color_r = 0
 		self.actual_regulation = 0
-		T_crit = 1
-		K_crit = 7
+		T_crit = 1.12
+		K_crit = 5
 		self.pid_ = pid.PID(0.6*K_crit, 0.13*T_crit, 0.5*T_crit)
 		#self.pid_ = pid.PID(K_crit, 0, 0)
 
@@ -62,8 +62,8 @@ class Robot:
 	def speed_corection(speed):
 		if speed > MAX_SPEED:
 			return MAX_SPEED
-		elif speed < 0:
-			return 0
+		elif speed < MIN_SPEED:
+			return MIN_SPEED
 		else:
 			return speed
 	
