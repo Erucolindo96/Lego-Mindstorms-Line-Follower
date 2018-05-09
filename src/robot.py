@@ -5,7 +5,7 @@ from math import *
 from time import sleep
 
 MAX_SPEED = 1000
-MIN_SPEED = -150
+MIN_SPEED = -200
 REGULATION_FACTOR = 2
 
 class Robot:
@@ -27,9 +27,9 @@ class Robot:
 		self.color_l = 0
 		self.color_r = 0
 		self.actual_regulation = 0
-		T_crit = 1.12
-		K_crit = 5
-		self.pid_ = pid.PID(0.6*K_crit, 0.13*T_crit, 0.5*T_crit)
+		T_crit = 1.7
+		K_crit = 5.5
+		self.pid_ = pid.PID(0.6*K_crit, 0.2*T_crit, 0.7*T_crit)
 		#self.pid_ = pid.PID(K_crit, 0, 0)
 
 	def read_colors(self):
@@ -80,7 +80,7 @@ class Robot:
 			
 	def zwolnij_wew_silnik_jak_sie_da(self, wew_silnik, reg_abs):
 		ile_zostanie_sterowania = self.ile_zostanie_sterowania_po_wysterowaniu_wewnetrznego(reg_abs)
-		print('zostalo sterowania {}'.format(ile_zostanie_sterowania))
+		#print('zostalo sterowania {}'.format(ile_zostanie_sterowania))
 		if ile_zostanie_sterowania == 0: #sterujemy tylko wew silnik
 			wew_silnik.run_forever(speed_sp=self.speed_corection(self.def_speed - reg_abs))
 		else: #troche sterowania zostanie - musimy wysterowac tez zewnetrzny silnik
@@ -91,8 +91,6 @@ class Robot:
 		colors=('unknown','black','blue','green','yellow','red','white','brown')
 		self.color_sensor_l.mode = 'COL-COLOR'
 		self.color_sensor_r.mode = 'COL-COLOR'
-		#color_l = 
-		print(colors[color_sensor.value()])
 		color_sensor.mode='COL-REFLECT'
 	
 

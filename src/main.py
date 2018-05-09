@@ -33,4 +33,7 @@ Predkosc | K_crit | T_crit | REGULATION_FACTOR
 300|8|0.9|1.5 # 0,7 mnoznik przy Kd
 250|7|0.9|1.5 #Kd mnoznik 0,5
 250|6.5|1|1.5| #Kd mnoznik 0,5
+250|5.5|1.7| Ki mnoznik 0.05, Kd mnoznik 0.6
+250|5.5|1.7| Ki mnoznik 0.2, Kd mnoznik 0.7, pamietane bledy 70
+
 '''
