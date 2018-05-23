@@ -6,11 +6,11 @@ from time import sleep
 
 def main():
 	try:
-		robot_ = robot.Robot('outD', 'outA','in4', 'in1', 250)
+		robot_ = robot.Robot('outD', 'outA', 'outC','in4', 'in1')
 		while 1:
-			robot_.read_colors()
-			print(robot_.count_regulation())
-			robot_.drive_motors()
+			print("Start While")
+			robot_.handle()
+			print("End While")
 			sleep(0.2)
 	except KeyboardInterrupt:
 		robot_.motor_l.stop(stop_action="hold")
