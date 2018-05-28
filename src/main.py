@@ -3,7 +3,6 @@ import pid
 import robot
 
 from time import sleep
-
 def main():
 	try:
 		robot_ = robot.Robot('outD', 'outA','in4', 'in1', 250)

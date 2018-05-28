@@ -54,10 +54,10 @@ class PID:
 			self.integral -= self.error_prior[0]*iteration_time
   					
 		self.integral+=error*iteration_time
-		print("Integral:{} ".format(self.integral))
+		#print("Integral:{} ".format(self.integral))
 		#zapis aktualnego bledu do pamietanych bledow		
 		if self.error_cnt >= MAX_INTEGRAL:
-			#wywalamy zerowy element i na koniec wstawiamy nowy
+			#wywalamy najstarszy element i na koncu listy wstawiamy nowy
 			self.error_prior = self.error_prior[1:]
 			self.error_prior.append(error)
 		else:
