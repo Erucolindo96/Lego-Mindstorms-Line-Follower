@@ -7,6 +7,8 @@ from enum import Enum
 from src.state import *
 from datetime import datetime
 
+class EndOfTestException(Exception):
+	pass
 
 state_map = {
 	"LINE_FOLLOWER": StateLineFollower,
@@ -40,11 +42,17 @@ class Robot:
 		self.state = state_map["LINE_FOLLOWER"](self)
 		#self.pid_ = pid.PID(K_crit, 0, 0)
 	
-	def handle(self):
-		try:
-			self.state.handle()
-		except ChangingStateExcaption as e:
-			self.state = state_map[e](self)
+	def handle(self, testing=False):
+		if not testing:
+			try:
+				self.state.handle()
+			except ChangingStateExcaption as e:
+				self.state = state_map[e](self)
+		else:
+			try:
+				self.state.handle()
+			except ChangingStateExcaption as e:
+				raise EndOfTestException(e)
 
 	def move_motors_for_time(self, miliseconds, speed_left, speed_right):
 		start_time = datetime.now()
