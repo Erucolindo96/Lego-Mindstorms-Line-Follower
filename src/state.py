@@ -48,7 +48,7 @@ class StateLineFollower(RobotState):
 
     def handle(self):
         self.read_colors()
-        # print(self.robot.count_regulation())
+        self.count_regulation()
         self.drive_motors()
         self.check_changing_state()
 
@@ -122,11 +122,10 @@ class StateFindTakingLine(RobotState):
         super().__init__(robot)
 
     def handle(self):
-        """
-        obrot w lewo o 90 stopni i podjechać trochę do przodu
-        """
+        """obrot w lewo o 90 stopni i podjechać trochę do przodu"""
+        self.robot.drive_forward(500, 250)
         self.robot.rotate_right_angle_left()
-        self.robot.drive_forward(1, 200)
+        self.robot.drive_forward(750, 250)
         raise ChangingStateExcaption("ENTER_TAKING_LINE_FOLLOWER")
 
 
@@ -149,6 +148,8 @@ class StateEnterTakingLineFollower(StateLineFollower):
             self.robot.color_sensor_l.mode = 'COL-REFLECT'
             self.robot.color_sensor_r.mode = 'COL-REFLECT'
             raise ChangingStateExcaption("INSIDE_TAKING_FIELD")
+        self.robot.color_sensor_l.mode = 'COL-REFLECT'
+        self.robot.color_sensor_r.mode = 'COL-REFLECT'        
 
 
 class StateInsideTakingField(RobotState):
@@ -157,24 +158,30 @@ class StateInsideTakingField(RobotState):
 
     def handle(self):
         """ Podjedz pod klocek podnieś lopatke obroc sie 180 i pojedz do lini """
-        start_time = datetime.now()
         riding_speed = 100
-        while self.robot.infrared_sensor.value() < 5:
+        #jedziemy do tylu kawalek
+        self.robot.move_motors_for_time(1200, -riding_speed, -riding_speed)       
+        #opuszczamuy łyche
+        self.robot.move_medium_motor_for_time(1150, -150)
+        start_time = datetime.now()
+        while self.robot.infrared_sensor.value() >= 1:
             self.robot.motor_l.run_forever(speed_sp=riding_speed)
             self.robot.motor_r.run_forever(speed_sp=riding_speed)
+        self.robot.stop_motors()
         end_time = datetime.now()
         time_of_riding = end_time-start_time
-        self.robot.medium_motor.run_timed(time_sp=2000, speed_sp=-750)
-        sleep(0.5)
+        #podnosimy łyche
+        self.robot.move_medium_motor_for_time(1700, 200)
         self.robot.rotate_semi_full_angle()
         self.robot.drive_forward(time_of_riding.total_seconds()*1000, riding_speed)
         raise ChangingStateExcaption("EXIT_TAKING_LINE_FOLLOWER")
+        #raise ChangingStateExcaption("LINE_FOLLOWER")
 
 
 class StateExitTakingLineFollower(StateLineFollower):
     def __init__(self, robot):
         super().__init__(robot)
-        self.def_speed = 250
+        self.def_speed = 100 #bylo 250
         self.color_l = 0
         self.color_r = 0
         self.actual_regulation = 0
@@ -183,12 +190,13 @@ class StateExitTakingLineFollower(StateLineFollower):
         self.pid_ = pid.PID(0.6 * K_crit, 0.2 * T_crit, 0.7 * T_crit)
 
     def check_changing_state(self):
+        BLACK_EPSILON = 20	
         colors = ('unknown', 'black', 'blue', 'green', 'yellow', 'red', 'white', 'brown')
-        self.robot.color_sensor_l.mode = 'COL-COLOR'
-        self.robot.color_sensor_r.mode = 'COL-COLOR'
-        if colors[self.robot.color_sensor_l.value()] == 'red' or colors[self.robot.color_sensor_l.value()] == 'red':
-            self.robot.color_sensor_l.mode = 'COL-REFLECT'
-            self.robot.color_sensor_r.mode = 'COL-REFLECT'
+        self.robot.color_sensor_l.mode = 'COL-REFLECT'
+        self.robot.color_sensor_r.mode = 'COL-REFLECT'
+        color1, color2 = self.read_colors() 
+        print ((color1, color2))
+        if color1 < BLACK_EPSILON and color2 < BLACK_EPSILON:
             raise ChangingStateExcaption("FIND_EXIT_TAKING_LINE")
 
 
@@ -200,7 +208,7 @@ class StateFindExitTakingLine(RobotState):
         """
          Podjechać do przodu obrocic sie w lewo o 90 stopnu
         """
-        self.robot.drive_forward(1000, 200)
+        self.robot.drive_forward(500, 250)
         self.robot.rotate_right_angle_left()
         raise ChangingStateExcaption("LINE_FOLLOWER")
 
@@ -212,12 +220,14 @@ class StateFindLeavingLine(RobotState):
         """
             obrot w lewo o 90 stopni i podjechać trochę do przodu
         """
+        self.robot.drive_forward(500, 250)
         self.robot.rotate_right_angle_left()
-        self.robot.drive_forward(1, 200)
+        self.robot.drive_forward(750, 250)
         raise ChangingStateExcaption("ENTER_LEAVING_LINE_FOLLOWER")
 
 
-class StateEnterLeavingLineFollower(RobotState):
+
+class StateEnterLeavingLineFollower(StateLineFollower):
     def __init__(self, robot):
         super().__init__(robot)
         self.def_speed = 250
@@ -236,6 +246,8 @@ class StateEnterLeavingLineFollower(RobotState):
             self.robot.color_sensor_l.mode = 'COL-REFLECT'
             self.robot.color_sensor_r.mode = 'COL-REFLECT'
             raise ChangingStateExcaption("LEAVING_BOX")
+        self.robot.color_sensor_l.mode = 'COL-REFLECT'
+        self.robot.color_sensor_r.mode = 'COL-REFLECT'        
 
 class StateLeavingBox(RobotState):
     def __init__(self, robot):
@@ -243,4 +255,21 @@ class StateLeavingBox(RobotState):
 
     def handle(self):
         self.robot.drive_forward(1000, 100)
-        self.robot.medium_motor.run_timed(time_sp=2000, speed_sp=750)
+        #opuszczamy łychę
+        self.robot.move_medium_motor_for_time(1200, -150)
+        #i odjezdzamy do tylu - wiencząc zwycięstwo
+        self.robot.drive_forward(2000, -100)
+        self.robot.move_medium_motor_for_time(2000, 100)        
+        raise ChangingStateExcaption("END")
+
+
+class StateEnd(RobotState):
+    def __init__(self, robot):
+        super().__init__(robot)
+
+    def handle(self):
+        print("the end!")
+        sleep(1)
+
+
+

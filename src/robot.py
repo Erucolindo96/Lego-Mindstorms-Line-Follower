@@ -4,8 +4,11 @@ import pid
 from math import *
 from time import sleep
 from enum import Enum
-from src.state import *
+from state import *
 from datetime import datetime
+
+RIGTH_ANGLE_ROUND_T = 1650
+ROUND_VEL = 100
 
 class EndOfTestException(Exception):
 	pass
@@ -20,6 +23,7 @@ state_map = {
 	"FIND_LEAVING_LINE": StateFindLeavingLine,
 	"ENTER_LEAVING_LINE_FOLLOWER": StateEnterLeavingLineFollower,
 	"LEAVING_BOX": StateLeavingBox,
+	"END": StateEnd,
 }
 
 class Robot:
@@ -47,7 +51,7 @@ class Robot:
 			try:
 				self.state.handle()
 			except ChangingStateExcaption as e:
-				self.state = state_map[e](self)
+				self.state = state_map[str(e)](self)
 		else:
 			try:
 				self.state.handle()
@@ -59,18 +63,37 @@ class Robot:
 		while (datetime.now() - start_time).total_seconds() * 1000 < miliseconds:
 			self.motor_l.run_forever(speed_sp=speed_left)
 			self.motor_r.run_forever(speed_sp=speed_right)
+		self.motor_l.stop(stop_action="hold")
+		self.motor_r.stop(stop_action="hold")
+
+	def move_medium_motor_for_time(self, miliseconds, speed):
+		start_time = datetime.now()
+		while (datetime.now() - start_time).total_seconds() * 1000 < miliseconds:
+			self.medium_motor.run_forever(speed_sp=speed)
+		self.medium_motor.stop(stop_action="hold")
 
 	def drive_forward(self, miliseconds, speed):
 		self.move_motors_for_time(miliseconds, speed, speed)
 
+	def stop_motors(self):
+		self.motor_l.stop(stop_action="hold")
+		self.motor_r.stop(stop_action="hold")
+		self.medium_motor.stop(stop_action="hold")
+	'''
+	180 stopni
+	'''
 	def rotate_semi_full_angle(self):
-		self.move_motors_for_time(1, -100, 100)
-
+		self.move_motors_for_time(2*RIGTH_ANGLE_ROUND_T, ROUND_VEL, -ROUND_VEL)
+	'''
+	W prawo o 90
+	'''
 	def rotate_right_angle_left(self):
-		self.move_motors_for_time(1, -100, 100)
-
+		self.move_motors_for_time(RIGTH_ANGLE_ROUND_T, ROUND_VEL, -ROUND_VEL)
+	'''
+	W lewo o 90
+	'''
 	def rotate_right_angle_right(self):
-		self.move_motors_for_time(1, 100, -100)
+		self.move_motors_for_time(RIGTH_ANGLE_ROUND_T, -ROUND_VEL, ROUND_VEL)
 
 
 
