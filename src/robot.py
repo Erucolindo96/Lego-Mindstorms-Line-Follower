@@ -6,6 +6,17 @@ from time import sleep
 from enum import Enum
 from state import *
 from datetime import datetime
+from src.states import exceptions
+from src.states import line_follower
+from src.states import find_exit_taking_line
+from src.states import enter_taking_line_follower
+from src.states import inside_taking_field
+from src.states import exit_taking_line_follower
+from src.states import find_exit_taking_line
+from src.states import find_leaving_line
+from src.states import enter_leaving_line_follower
+from src.states import leaving_box
+from src.states import end
 
 RIGTH_ANGLE_ROUND_T = 1650
 ROUND_VEL = 100
@@ -14,16 +25,16 @@ class EndOfTestException(Exception):
 	pass
 
 state_map = {
-	"LINE_FOLLOWER": StateLineFollower,
-	"FIND_TAKING_LINE": StateFindTakingLine,
-	"ENTER_TAKING_LINE_FOLLOWER": StateEnterTakingLineFollower,
-	"INSIDE_TAKING_FIELD": StateInsideTakingField,
-	"EXIT_TAKING_LINE_FOLLOWER": StateExitTakingLineFollower,
-	"FIND_EXIT_TAKING_LINE": StateFindExitTakingLine,
-	"FIND_LEAVING_LINE": StateFindLeavingLine,
-	"ENTER_LEAVING_LINE_FOLLOWER": StateEnterLeavingLineFollower,
-	"LEAVING_BOX": StateLeavingBox,
-	"END": StateEnd,
+	"LINE_FOLLOWER": line_follower.StateLineFollower,
+	"FIND_TAKING_LINE": find_exit_taking_line.StateFindTakingLine,
+	"ENTER_TAKING_LINE_FOLLOWER": enter_taking_line_follower.StateEnterTakingLineFollower,
+	"INSIDE_TAKING_FIELD": inside_taking_field.StateInsideTakingField,
+	"EXIT_TAKING_LINE_FOLLOWER": exit_taking_line_follower.StateExitTakingLineFollower,
+	"FIND_EXIT_TAKING_LINE": find_exit_taking_line.StateFindExitTakingLine,
+	"FIND_LEAVING_LINE": find_leaving_line.StateFindLeavingLine,
+	"ENTER_LEAVING_LINE_FOLLOWER": enter_leaving_line_follower.StateEnterLeavingLineFollower,
+	"LEAVING_BOX": leaving_box.StateLeavingBox,
+	"END": end.StateEnd,
 }
 
 class Robot:
@@ -50,12 +61,12 @@ class Robot:
 		if not testing:
 			try:
 				self.state.handle()
-			except ChangingStateExcaption as e:
+			except exceptions.ChangingStateExcaption as e:
 				self.state = state_map[str(e)](self)
 		else:
 			try:
 				self.state.handle()
-			except ChangingStateExcaption as e:
+			except exceptions.ChangingStateExcaption as e:
 				raise EndOfTestException(e)
 
 	def move_motors_for_time(self, miliseconds, speed_left, speed_right):
