@@ -1,5 +1,4 @@
 import pid
-from math import *
 from time import sleep
 from datetime import datetime
 
@@ -7,21 +6,6 @@ MAX_SPEED = 1000
 MIN_SPEED = -200
 REGULATION_FACTOR = 2
 
-'''
-LINE_FOLLOWER
-----------Znalezienie lini czerwonej z ktorej bierzemy klocek------------
-FIND_TAKING_LINE
-ENTER_TAKING_LINE_FOLLOWER
-INSIDE_TAKING_FIELD
-EXIT_TAKING_LINE_FOLLOWER
-FIND_EXIT_TAKING_LINE
-
-----------Znalezienie lini zielonej na ktora odkladamy klocek------------
-FIND_LEAVING_LINE
-ENTER_LEAVING_LINE_FOLLOWER
-LEAVING_BOX
-
-'''
 
 class ChangingStateExcaption(Exception):
     pass
@@ -75,9 +59,6 @@ class StateLineFollower(RobotState):
         self.zwolnij_wew_silnik_jak_sie_da(wew_silnik, regulation_abs)
         zew_silnik.run_forever(speed_sp=self.speed_corection(self.def_speed + ile_dla_zewnetrznego))
 
-    # left_motor.run_forever(speed_sp=left_speed)
-    # right_motor.run_forever(speed_sp=right_speed)
-
     @staticmethod
     def speed_corection(speed):
         if speed > MAX_SPEED:
@@ -100,7 +81,6 @@ class StateLineFollower(RobotState):
 
     def zwolnij_wew_silnik_jak_sie_da(self, wew_silnik, reg_abs):
         ile_zostanie_sterowania = self.ile_zostanie_sterowania_po_wysterowaniu_wewnetrznego(reg_abs)
-        # print('zostalo sterowania {}'.format(ile_zostanie_sterowania))
         if ile_zostanie_sterowania == 0:  # sterujemy tylko wew silnik
             wew_silnik.run_forever(speed_sp=self.speed_corection(self.def_speed - reg_abs))
         else:  # troche sterowania zostanie - musimy wysterowac tez zewnetrzny silnik
